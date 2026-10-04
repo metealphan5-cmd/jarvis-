@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS 5</title>
+
+<script src="https://js.puter.com/v2/"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --main: #ff8c00;
+  --glow: rgba(255,140,0,.7);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center,
+      rgba(255,140,0,.12),
+      transparent 35%),
+    #020407;
+  color: var(--main);
+  font-family: Arial, sans-serif;
+  transition: .4s;
+}
+
+body.thinking {
+  --main: #00aaff;
+  --glow: rgba(0,170,255,.75);
+}
+
+body.speaking {
+  --main: #00ff73;
+  --glow: rgba(0,255,115,.75);
+}
+
+body.error {
+  --main: #ff2020;
+  --glow: rgba(255,32,32,.75);
+}
+
+header {
+  height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  border-bottom: 1px solid var(--main);
+  box-shadow: 0 0 25px var(--glow);
+  background: rgba(0,0,0,.5);
+}
+
+.logo {
+  font-size: 27px;
+  font-weight: bold;
+  letter-spacing: 7px;
+  text-shadow: 0 0 15px var(--main);
+}
+
+.version {
+  font-size: 12px;
+  letter-spacing: 3px;
+  opacity: .6;
+}
+
+main {
+  min-height: calc(100vh - 75px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* REACTOR */
+
+.reactor {
+  width: 300px;
+  height: 300px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  filter:
+    drop-shadow(0 0 15px var(--main))
+    drop-shadow(0 0 40px var(--glow));
+}
+
+.ring1,
+.ring2,
+.ring3,
+.core {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.ring1 {
+  width: 300px;
+  height: 300px;
+  border: 3px solid var(--main);
+  animation: spin 15s linear infinite;
+  box-shadow: inset 0 0 20px var(--glow);
+}
+
+.ring1::before,
+.ring1::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed var(--main);
+}
+
+.ring1::before {
+  inset: 18px;
+}
+
+.ring1::after {
+  inset: 35px;
+}
+
+.ring2 {
+  width: 225px;
+  height: 225px;
+  border: 3px solid var(--main);
+  animation: reverseSpin 9s linear infinite;
+}
+
+.ring2::before,
+.ring2::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--main);
+  box-shadow: 0 0 15px var(--main);
+}
+
+.ring2::before {
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.ring2::after {
+  bottom: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.ring3 {
+  width: 165px;
+  height: 165px;
+  border: 5px solid var(--main);
+  box-shadow:
+    0 0 20px var(--main),
+    inset 0 0 25px var(--glow);
+  animation: pulse 2s infinite;
+}
+
+.core {
+  width: 85px;
+  height: 85px;
+  background: radial-gradient(
+    circle,
+    white 0%,
+    var(--main) 20%,
+    var(--main) 38%,
+    #001 75%
+  );
+  box-shadow:
+    0 0 20px white,
+    0 0 40px var(--main),
+    0 0 90px var(--main);
+  animation: corePulse 1.4s infinite;
+}
+
+.status {
+  margin-top: 35px;
+  font-size: 18px;
+  letter-spacing: 3px;
+  text-align: center;
+  text-shadow: 0 0 15px var(--main);
+}
+
+.buttons {
+  margin-top: 25px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+button {
+  min-width: 210px;
+  padding: 15px 25px;
+  border: 1px solid var(--main);
+  background: rgba(0,0,0,.4);
+  color: var(--main);
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+  border-radius: 5px;
+  box-shadow: 0 0 15px var(--glow);
+  transition: .2s;
+}
+
+button:hover {
+  background: var(--main);
+  color: black;
+  box-shadow: 0 0 30px var(--main);
+}
+
+button:active {
+  transform: scale(.95);
+}
+
+#result {
+  margin-top: 18px;
+  max-width: 80%;
+  text-align: center;
+  font-size: 14px;
+  opacity: .7;
+}
+
+footer {
+  position: fixed;
+  bottom: 12px;
+  width: 100%;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 3px;
+  opacity: .3;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes reverseSpin {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes corePulse {
+  0%,100% { transform: scale(.9); }
+  50% { transform: scale(1.1); }
+}
+
+@media(max-width:600px) {
+  .reactor {
+    width: 250px;
+    height: 250px;
+  }
+
+  .ring1 {
+    width: 250px;
+    height: 250px;
+  }
+
+  .ring2 {
+    width: 190px;
+    height: 190px;
+  }
+
+  .ring3 {
+    width: 145px;
+    height: 145px;
+  }
+
+  .core {
+    width: 70px;
+    height: 70px;
+  }
+
+  button {
+    width: 85vw;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">JARVIS</div>
+  <div class="version">SYSTEM V5</div>
+</header>
+
+<main>
+
+  <div class="reactor">
+    <div class="ring1"></div>
+    <div class="ring2"></div>
+    <div class="ring3"></div>
+    <div class="core"></div>
+  </div>
+
+  <div id="status" class="status">
+    SİSTEM HAZIR
+  </div>
+
+  <div class="buttons">
+
+    <button id="talkButton">
+      JARVIS KONUŞ
+    </button>
+
+    <button id="listenButton">
+      BENİ DİNLE
+    </button>
+
+  </div>
+
+  <div id="result"></div>
+
+</main>
+
+<footer>
+JARVIS ARTIFICIAL INTELLIGENCE SYSTEM
+</footer>
+
+<script>
+
+const status = document.getElementById("status");
+const result = document.getElementById("result");
+
+const talkButton = document.getElementById("talkButton");
+const listenButton = document.getElementById("listenButton");
+
+
+/* =========================
+   DURUM SİSTEMİ
+========================= */
+
+function durum(state, text) {
+
+  document.body.classList.remove(
+    "thinking",
+    "speaking",
+    "error"
+  );
+
+  if (state !== "idle") {
+    document.body.classList.add(state);
+  }
+
+  status.textContent = text;
+}
+
+
+/* =========================
+   EMOJİ TEMİZLEME
+========================= */
+
+function temizle(text) {
+
+  return text
+    .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
+    .replace(/[\u{2600}-\u{27BF}]/g, "")
+    .replace(/[*_#`~<>[\]{}|]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+}
+
+
+/* =========================
+   TÜRKÇE SES
+========================= */
+
+function turkceSes() {
+
+  const voices =
+    speechSynthesis.getVoices();
+
+  return voices.find(v =>
+    v.lang &&
+    v.lang.toLowerCase() === "tr-tr"
+  ) || voices.find(v =>
+    v.lang &&
+    v.lang.toLowerCase().startsWith("tr")
+  );
+
+}
+
+
+/* =========================
+   KONUŞMA
+========================= */
+
+function konus(text) {
+
+  return new Promise(resolve => {
+
+    text = temizle(text);
+
+    if (!text) {
+      resolve();
+      return;
+    }
+
+    speechSynthesis.cancel();
+
+    durum(
+      "speaking",
+      "JARVIS KONUŞUYOR"
+    );
+
+    const ses =
+      new SpeechSynthesisUtterance(text);
+
+    ses.lang = "tr-TR";
+    ses.rate = 0.9;
+    ses.pitch = 0.75;
+    ses.volume = 1;
+
+    const voice = turkceSes();
+
+    if (voice) {
+      ses.voice = voice;
+    }
+
+    ses.onend = () => {
+
+      durum(
+        "idle",
+        "SİSTEM HAZIR"
+      );
+
+      resolve();
+
+    };
+
+    ses.onerror = () => {
+
+      durum(
+        "error",
+        "SES HATASI"
+      );
+
+      resolve();
+
+    };
+
+    speechSynthesis.speak(ses);
+
+  });
+
+}
+
+
+/* =========================
+   JARVIS KONUŞ BUTONU
+========================= */
+
+talkButton.addEventListener(
+  "click",
+  async () => {
+
+    result.textContent = "";
+
+    await konus(
+      "Merhaba. Ben JARVIS. Sistemlerim hazır."
+    );
+
+  }
+);
+
+
+/* =========================
+   MİKROFON
+========================= */
+
+const Recognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+let recognition = null;
+
+if (Recognition) {
+
+  recognition = new Recognition();
+
+  recognition.lang = "tr-TR";
+
+  recognition.continuous = false;
+
+  recognition.interimResults = false;
+
+  recognition.maxAlternatives = 1;
+
+
+  recognition.onstart = () => {
+
+    durum(
+      "thinking",
+      "SENİ DİNLİYORUM"
+    );
+
+  };
+
+
+  recognition.onresult =
+    async event => {
+
+      const text =
+        event.results[0][0].transcript;
+
+      result.textContent =
+        "Sen: " + text;
+
+      durum(
+        "thinking",
+        "JARVIS DÜŞÜNÜYOR"
+      );
+
+
+      try {
+
+        const response =
+          await puter.ai.chat(
+            text,
+            {
+              model: "gpt-5.6-luna"
+            }
+          );
+
+
+        let answer = "";
+
+
+        if (typeof response === "string") {
+
+          answer = response;
+
+        }
+
+        else if (
+          response &&
+          response.message &&
+          response.message.content
+        ) {
+
+          answer =
+            response.message.content;
+
+        }
+
+        else if (
+          response &&
+          response.text
+        ) {
+
+          answer =
+            response.text;
+
+        }
+
+        else {
+
+          answer =
+            "Üzgünüm, cevap alamadım.";
+
+        }
+
+
+        result.textContent =
+          "JARVIS: " + temizle(answer);
+
+
+        await konus(answer);
+
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        durum(
+          "error",
+          "YAPAY ZEKA HATASI"
+        );
+
+        await konus(
+          "Üzgünüm. Bir hata oluştu."
+        );
+
+      }
+
+    };
+
+
+  recognition.onerror =
+    event => {
+
+      console.error(
+        "Mikrofon:",
+        event.error
+      );
+
+      durum(
+        "error",
+        "MİKROFON HATASI"
+      );
+
+    };
+
+
+  recognition.onend = () => {
+
+    if (
+      !document.body.classList.contains(
+        "error"
+      )
+    ) {
+
+      durum(
+        "idle",
+        "SİSTEM HAZIR"
+      );
+
+    }
+
+  };
+
+}
+
+
+/* =========================
+   DİNLE BUTONU
+========================= */
+
+listenButton.addEventListener(
+  "click",
+  () => {
+
+    if (!recognition) {
+
+      durum(
+        "error",
+        "TARAYICI MİKROFONU DESTEKLEMİYOR"
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      speechSynthesis.cancel();
+
+      result.textContent = "";
+
+      recognition.start();
+
+    }
+
+    catch (error) {
+
+      console.error(error);
+
+      durum(
+        "error",
+        "MİKROFON BAŞLATILAMADI"
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================
+   SESLERİ YÜKLE
+========================= */
+
+speechSynthesis.onvoiceschanged =
+  () => {
+
+    speechSynthesis.getVoices();
+
+  };
+
+
+/* =========================
+   BAŞLANGIÇ
+========================= */
+
+durum(
+  "idle",
+  "SİSTEM HAZIR"
+);
+
+</script>
+
+</body>
+</html>
